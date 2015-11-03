@@ -2,10 +2,13 @@ Param(
 	[Parameter(Mandatory=$true)]
 	[string]$user,
 	[Parameter(Mandatory=$true)]
-	[string]$password
+	[string]$password,
+	[string]$smtpServer = "",
+	[string]$dest = "pascal.audoux@maf.fr"
 )
 $filepath = "S:\Etudes\Commun_Etudes\Livres\Programmez\"
 $baseurl = "http://www.programmez.com"
+[string[]]$destMail = $dest.Split(",")
 
 $req = Invoke-WebRequest "http://www.programmez.com/user/"
 $formId=$req.forms["user-login"].Fields["form_build_id"]
@@ -27,12 +30,16 @@ foreach($item in $archives) {
 
 $downloaded = Get-ChildItem -Path $filepath -File | Where-Object -Filter {$PSItem.Name -like "mag_*.pdf"}
 $downloaded = $downloaded.Name
-
+$download = $false
 foreach ($item in $archiveNames){
 	if ( $downloaded -notcontains $item ) {
 		$url = $baseurl + $paths["$item"]
 		Invoke-WebRequest $url -OutFile "$filepath$item" -WebSession $myWebSession
+		$download = $true
 	}
+}
+if ( ($download -eq $true) -And ($smtpServer -ne "") ) {
+	Send-MailMessage -To $destMail -From "Programmez <programmez@maf.fr>" -subject "Nouveau magazine Programmez disponible" -body "Nouveau magazine disponible dans $filepath" -smtpServer "$smtpServer"
 }
 
 
