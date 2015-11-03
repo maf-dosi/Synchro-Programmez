@@ -30,16 +30,16 @@ foreach($item in $archives) {
 
 $downloaded = Get-ChildItem -Path $filepath -File | Where-Object -Filter {$PSItem.Name -like "mag_*.pdf"}
 $downloaded = $downloaded.Name
-$download = $false
+$download = ""
 foreach ($item in $archiveNames){
 	if ( $downloaded -notcontains $item ) {
 		$url = $baseurl + $paths["$item"]
 		Invoke-WebRequest $url -OutFile "$filepath$item" -WebSession $myWebSession
-		$download = $true
+		$download += $item
 	}
 }
-if ( ($download -eq $true) -And ($smtpServer -ne "") ) {
-	Send-MailMessage -To $destMail -From "Programmez <programmez@maf.fr>" -subject "Nouveau magazine Programmez disponible" -body "Nouveau magazine disponible dans $filepath" -smtpServer "$smtpServer"
+if ( ($download -ne "") -And ($smtpServer -ne "") ) {
+	Send-MailMessage -To $destMail -From "Programmez <programmez@maf.fr>" -subject "Nouveau magazine Programmez disponible" -body "Nouveau magazine '$download' disponible dans $filepath" -smtpServer "$smtpServer"
 }
 
 
